@@ -187,18 +187,19 @@
     </div>
 
     <script>
-        // MASUKKAN KREDENSIAL SUPABASE ANDA DI SINI
-        const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby";
+        // 1. MASUKKAN KREDENSIAL SUPABASE ANDA DI SINI (Wajib pakai tanda kutip lurus)
+        const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby"; 
 
-        const supabase = @supabase/supabase-js.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 2. INISIALISASI YANG BENAR
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let userSesi = null;
         let userRole = 'staf'; // Default role
         let dbBarang = [];
         let dbJenis = [];
         let dbLokasi = [];
-
+        
         // 1. MANAJEMEN AUTENTIKASI (LOGIN / SIGN UP)
         const formAuth = document.getElementById('formAuth');
         const btnSignUp = document.getElementById('btnSignUp');
