@@ -42,6 +42,7 @@
                     <button onclick="pindahTab('tab-input')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-input">📥 Input Barang</button>
                     <button onclick="pindahTab('tab-lihat')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-lihat">🔍 Daftar & Cari</button>
                     <button onclick="pindahTab('tab-pengaturan')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-pengaturan">⚙️ Pengaturan Opsi</button>
+                    <button onclick="pindahTab('tab-pengguna')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white hidden" id="btn-tab-pengguna">👥 Kelola Pengguna</button>
                 </nav>
             </div>
             <div class="border-t border-slate-800 pt-4 mt-6">
@@ -183,15 +184,38 @@
                 </div>
             </section>
 
+            <section id="tab-pengguna" class="tab-content hidden">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900">Manajemen Peran Pengguna</h2>
+                    <p class="text-slate-500">Tentukan tingkat hak akses (Admin, Asisten, atau Staf) secara langsung dan real-time.</p>
+                </header>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-800 text-white">
+                                    <th class="p-4 font-semibold">Email Pengguna</th>
+                                    <th class="p-4 font-semibold">Peran Saat Ini</th>
+                                    <th class="p-4 font-semibold">Ubah Hak Akses</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelUserRolesBody" class="divide-y divide-slate-100">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
     <script>
-        // 1. KREDENSIAL SUPABASE ANDA (Wajib menggunakan tanda kutip lurus biasa)
+        // 1. KREDENSIAL SUPABASE ANDA
         const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby";
 
-        // 2. INISIALISASI KONEKSI (Kita ganti namanya menjadi supabaseClient agar tidak bentrok)
+        // 2. INISIALISASI KONEKSI
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let userSesi = null;
@@ -199,6 +223,7 @@
         let dbBarang = [];
         let dbJenis = [];
         let dbLokasi = [];
+        let dbUserRoles = []; // Menampung data pengguna untuk Admin
 
         // 3. MANAJEMEN AUTENTIKASI (LOGIN / SIGN UP)
         const formAuth = document.getElementById('formAuth');
@@ -265,18 +290,23 @@
         }
 
         function batasiAksesUI() {
+            const btnTabPengguna = document.getElementById('btn-tab-pengguna');
+            
             if (userRole === 'staf') {
                 document.getElementById('th-aksi').classList.add('hidden');
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
+                if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
             } else if (userRole === 'asisten') {
                 document.getElementById('th-aksi').classList.remove('hidden');
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
-            } else {
+                if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
+            } else if (userRole === 'admin') {
                 document.getElementById('th-aksi').classList.remove('hidden');
                 document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.add('hidden');
+                if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             }
         }
 
@@ -291,6 +321,12 @@
             const { data: barang } = await supabaseClient.from('inventaris').select('*').order('created_at', { ascending: false });
             dbBarang = barang || [];
 
+            // Jika user adalah admin, ambil data seluruh akun pengguna untuk manajemen peran
+            if (userRole === 'admin') {
+                const { data: roles } = await supabaseClient.from('user_roles').select('*');
+                dbUserRoles = roles || [];
+            }
+
             jalankanSistemUI();
         }
 
@@ -304,8 +340,10 @@
                 btn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
             });
             const activeBtn = document.getElementById(`btn-${tabId}`);
-            activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
-            activeBtn.classList.add('bg-slate-800', 'text-white');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+                activeBtn.classList.add('bg-slate-800', 'text-white');
+            }
         }
 
         // Render Dropdown untuk Input Barang
@@ -335,6 +373,60 @@
                     <button onclick="hapusOpsi('lokasi', ${l.id})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </li>
             `).join('');
+        }
+
+        // Render Tabel Pengguna (Khusus Admin)
+        function renderTabelUserRoles() {
+            const tbody = document.getElementById('tabelUserRolesBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            dbUserRoles.forEach(user => {
+                const selectId = `role-select-${user.user_id}`;
+                const row = `
+                    <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
+                        <td class="p-4 font-medium text-slate-900">${user.email}</td>
+                        <td class="p-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-semibold uppercase">${user.role}</span>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex gap-2">
+                                <select id="${selectId}" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="staf" ${user.role === 'staf' ? 'selected' : ''}>Staf</option>
+                                    <option value="asisten" ${user.role === 'asisten' ? 'selected' : ''}>Asisten</option>
+                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                </select>
+                                <button onclick="ubahRoleUser('${user.user_id}', document.getElementById('${selectId}').value)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Simpan</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Fungsi mengubah Peran Pengguna di Supabase
+        async function ubahRoleUser(userId, roleBaru) {
+            // Konfirmasi jika Admin ingin mengubah peran dirinya sendiri (mencegah kehilangan akses tidak sengaja)
+            if (userId === userSesi.id && roleBaru !== 'admin') {
+                const yakin = confirm('Anda mencoba menurunkan hak akses Anda sendiri. Anda tidak akan dapat mengakses tab ini lagi jika disimpan. Lanjutkan?');
+                if (!yakin) return;
+            }
+
+            const { error } = await supabaseClient
+                .from('user_roles')
+                .update({ role: roleBaru })
+                .eq('user_id', userId);
+
+            if (error) {
+                alert('Gagal mengubah peran: ' + error.message);
+            } else {
+                alert('Peran pengguna berhasil diperbarui!');
+                if (userId === userSesi.id) {
+                    await dapatkanRoleUser(); // Perbarui status role lokal
+                }
+                await sinkronkanSemuaData(); // Sinkronisasi ulang data di layar
+            }
         }
 
         // Tambah Opsi Baru ke Cloud Database
@@ -447,6 +539,11 @@
             renderPengaturan();
             renderTabelUtama();
             hitungKalkulasiDashboard();
+            
+            // Render tabel kelola pengguna jika role-nya admin
+            if (userRole === 'admin') {
+                renderTabelUserRoles();
+            }
         }
     </script>
 </body>
