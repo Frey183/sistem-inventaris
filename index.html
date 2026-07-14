@@ -187,25 +187,25 @@
     </div>
 
     <script>
-        // 1. MASUKKAN KREDENSIAL SUPABASE ANDA DI SINI (Wajib pakai tanda kutip lurus)
-        const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby"; 
+        // 1. KREDENSIAL SUPABASE ANDA (Wajib menggunakan tanda kutip lurus biasa)
+        const SUPABASE_URL = "GANTI_DENGAN_URL_SUPABASE_ANDA";
+        const SUPABASE_ANON_KEY = "GANTI_DENGAN_ANON_KEY_SUPABASE_ANDA";
 
-        // 2. INISIALISASI YANG BENAR
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 2. INISIALISASI KONEKSI (Kita ganti namanya menjadi supabaseClient agar tidak bentrok)
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let userSesi = null;
         let userRole = 'staf'; // Default role
         let dbBarang = [];
         let dbJenis = [];
         let dbLokasi = [];
-        
-        // 1. MANAJEMEN AUTENTIKASI (LOGIN / SIGN UP)
+
+        // 3. MANAJEMEN AUTENTIKASI (LOGIN / SIGN UP)
         const formAuth = document.getElementById('formAuth');
         const btnSignUp = document.getElementById('btnSignUp');
 
         // Memantau Status Login Aktif
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (session) {
                 userSesi = session.user;
                 document.getElementById('auth-screen').classList.add('hidden');
@@ -227,11 +227,11 @@
             const password = document.getElementById('authPassword').value;
             if(!email || !password) return alert('Isi email dan password.');
 
-            const { data, error } = await supabase.auth.signUp({ email, password });
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
             if (error) return alert('Gagal Daftar: ' + error.message);
             
             // Catat role default 'staf' di tabel user_roles
-            await supabase.from('user_roles').insert({ user_id: data.user.id, email: email, role: 'staf' });
+            await supabaseClient.from('user_roles').insert({ user_id: data.user.id, email: email, role: 'staf' });
             alert('Registrasi berhasil! Silakan cek email masuk untuk konfirmasi atau langsung gunakan akun.');
         });
 
@@ -241,17 +241,17 @@
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
 
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) alert('Gagal Masuk: ' + error.message);
         });
 
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
         }
 
-        // 2. MENDAPATKAN DAN MENERAPKAN ROLE AKSES (RBAC)
+        // 4. MENDAPATKAN DAN MENERAPKAN ROLE AKSES (RBAC)
         async function dapatkanRoleUser() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('user_roles')
                 .select('role')
                 .eq('user_id', userSesi.id)
@@ -265,38 +265,30 @@
         }
 
         function batasiAksesUI() {
-            // Pengaturan Batasan Hak Akses UI (Client-Side Protection)
             if (userRole === 'staf') {
-                // Staf tidak boleh hapus barang
                 document.getElementById('th-aksi').classList.add('hidden');
-                // Staf tidak boleh ubah opsi Jenis/Lokasi
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
             } else if (userRole === 'asisten') {
-                // Asisten boleh menginput data tapi tidak boleh merusak konfigurasi parameter
                 document.getElementById('th-aksi').classList.remove('hidden');
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
             } else {
-                // Admin memiliki akses penuh terhadap semua kontrol
                 document.getElementById('th-aksi').classList.remove('hidden');
                 document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.add('hidden');
             }
         }
 
-        // 3. OPERASI CRUD DATABASE DENGAN SUPABASE
+        // 5. OPERASI CRUD DATABASE DENGAN SUPABASE
         async function sinkronkanSemuaData() {
-            // Ambil data Jenis
-            const { data: jenis } = await supabase.from('jenis_barang').select('*');
+            const { data: jenis } = await supabaseClient.from('jenis_barang').select('*');
             dbJenis = jenis || [];
             
-            // Ambil data Lokasi
-            const { data: lokasi } = await supabase.from('lokasi_barang').select('*');
+            const { data: lokasi } = await supabaseClient.from('lokasi_barang').select('*');
             dbLokasi = lokasi || [];
 
-            // Ambil data Utama Inventaris
-            const { data: barang } = await supabase.from('inventaris').select('*').order('created_at', { ascending: false });
+            const { data: barang } = await supabaseClient.from('inventaris').select('*').order('created_at', { ascending: false });
             dbBarang = barang || [];
 
             jalankanSistemUI();
@@ -349,7 +341,7 @@
         document.getElementById('formTambahJenis').addEventListener('submit', async function(e) {
             e.preventDefault();
             const nama = document.getElementById('inputJenisBaru').value.trim();
-            const { error } = await supabase.from('jenis_barang').insert({ nama });
+            const { error } = await supabaseClient.from('jenis_barang').insert({ nama });
             if (error) alert(error.message);
             this.reset();
             await sinkronkanSemuaData();
@@ -358,7 +350,7 @@
         document.getElementById('formTambahLokasi').addEventListener('submit', async function(e) {
             e.preventDefault();
             const nama = document.getElementById('inputLokasiBaru').value.trim();
-            const { error } = await supabase.from('lokasi_barang').insert({ nama });
+            const { error } = await supabaseClient.from('lokasi_barang').insert({ nama });
             if (error) alert(error.message);
             this.reset();
             await sinkronkanSemuaData();
@@ -367,7 +359,7 @@
         async function hapusOpsi(tipe, id) {
             if (confirm('Menghapus parameter ini berisiko memutus relasi pada aset yang terdaftar.')) {
                 const table = tipe === 'jenis' ? 'jenis_barang' : 'lokasi_barang';
-                const { error } = await supabase.from(table).delete().eq('id', id);
+                const { error } = await supabaseClient.from(table).delete().eq('id', id);
                 if (error) alert(error.message);
                 await sinkronkanSemuaData();
             }
@@ -385,7 +377,7 @@
                 lokasi: document.getElementById('invLokasi').value
             };
 
-            const { error } = await supabase.from('inventaris').insert(payload);
+            const { error } = await supabaseClient.from('inventaris').insert(payload);
             if (error) {
                 alert('Gagal menyimpan: ' + error.message);
             } else {
@@ -399,7 +391,7 @@
         // Hapus Data Inventaris dari Supabase
         async function hapusBarang(id) {
             if (confirm('Yakin ingin menghapus aset ini secara permanen dari server?')) {
-                const { error } = await supabase.from('inventaris').delete().eq('id', id);
+                const { error } = await supabaseClient.from('inventaris').delete().eq('id', id);
                 if (error) alert(error.message);
                 await sinkronkanSemuaData();
             }
