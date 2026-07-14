@@ -3,17 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Inventaris Modern</title>
+    <title>Sistem Inventaris Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans text-slate-800">
 
-    <div class="flex flex-col md:flex-row min-h-screen">
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200 max-w-md w-full">
+            <h2 class="text-3xl font-bold text-center text-slate-900 mb-2">InvManager Cloud</h2>
+            <p class="text-center text-slate-500 mb-6 text-sm">Masuk untuk mengelola inventarisasi perangkat</p>
+            <form id="formAuth" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Email</label>
+                    <input type="email" id="authEmail" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Password</label>
+                    <input type="password" id="authPassword" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                </div>
+                <div class="flex gap-4 pt-2">
+                    <button type="button" id="btnSignUp" class="w-1/2 border border-blue-600 text-blue-600 font-semibold py-2.5 rounded-lg hover:bg-blue-50 transition">Daftar</button>
+                    <button type="submit" id="btnLogin" class="w-1/2 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">Masuk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-screen" class="hidden flex flex-col md:flex-row min-h-screen">
         <aside class="w-full md:w-64 bg-slate-900 text-white p-6 flex flex-col justify-between">
             <div>
                 <div class="mb-8">
-                    <h1 class="text-2xl font-bold tracking-tight text-blue-400">InvManager v2</h1>
-                    <p class="text-xs text-slate-400">Sistem Inventarisasi Aset</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-blue-400">InvManager v3</h1>
+                    <p class="text-xs text-slate-400" id="user-role-display">Mengecek peran...</p>
                 </div>
                 <nav class="space-y-2">
                     <button onclick="pindahTab('tab-dashboard')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition bg-slate-800 text-white" id="btn-tab-dashboard">📊 Dashboard</button>
@@ -22,8 +44,9 @@
                     <button onclick="pindahTab('tab-pengaturan')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-pengaturan">⚙️ Pengaturan Opsi</button>
                 </nav>
             </div>
-            <div class="text-xs text-slate-500 border-t border-slate-800 pt-4 mt-6">
-                Mode: Vibe Coding Cloud
+            <div class="border-t border-slate-800 pt-4 mt-6">
+                <p class="text-xs text-slate-400 truncate mb-2" id="user-email-display"></p>
+                <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 rounded-lg transition">Keluar</button>
             </div>
         </aside>
 
@@ -31,23 +54,23 @@
             
             <section id="tab-dashboard" class="tab-content">
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-slate-900">Ringkasan Data Aset</h2>
-                    <p class="text-slate-500">Kondisi riil inventarisasi saat ini</p>
+                    <h2 class="text-3xl font-bold text-slate-900">Ringkasan Data Aset Cloud</h2>
+                    <p class="text-slate-500">Data sinkronisasi real-time langsung dari server</p>
                 </header>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-sm font-medium text-slate-500 uppercase">Total Barang</p>
                         <p class="text-3xl font-bold text-slate-900 mt-2" id="stat-total">0 Unit</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-sm font-medium text-slate-500 uppercase">Kondisi Bagus</p>
                         <p class="text-3xl font-bold text-emerald-600 mt-2" id="stat-bagus">0 Unit</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-sm font-medium text-slate-500 uppercase">Sedang Diperbaiki</p>
                         <p class="text-3xl font-bold text-amber-500 mt-2" id="stat-diperbaiki">0 Unit</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-sm font-medium text-slate-500 uppercase">Rusak Total</p>
                         <p class="text-3xl font-bold text-red-600 mt-2" id="stat-rusak">0 Unit</p>
                     </div>
@@ -57,56 +80,55 @@
             <section id="tab-input" class="tab-content hidden">
                 <header class="mb-8">
                     <h2 class="text-3xl font-bold text-slate-900">Registrasi Inventaris Baru</h2>
-                    <p class="text-slate-500">Pastikan nomor dan spesifikasi data telah sesuai</p>
+                    <p class="text-slate-500">Formulir hanya dapat diakses oleh Admin, Asisten, dan Staf</p>
                 </header>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl">
                     <form id="formBarang" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Nomor Inventaris</label>
-                                <input type="text" id="invNomor" required placeholder="INV-2026-001" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                                <input type="text" id="invNomor" required placeholder="INV-2026-001" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50">
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal Inventaris</label>
-                                <input type="date" id="invTanggal" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                                <input type="date" id="invTanggal" required class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Perangkat / Barang</label>
-                            <input type="text" id="invNama" required placeholder="Contoh: Core i5, RAM 16GB" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Perangkat</label>
+                            <input type="text" id="invNama" required placeholder="Contoh: Core i5, RAM 16GB" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50">
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Jenis Barang</label>
-                                <select id="invJenis" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"></select>
+                                <select id="invJenis" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50"></select>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Status</label>
-                                <select id="invStatus" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                                <select id="invStatus" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50">
                                     <option value="Bagus">Bagus</option>
                                     <option value="Diperbaiki">Diperbaiki</option>
-                                    <option value="Rusak">Rusak / Tidak dapat diperbaiki</option>
+                                    <option value="Rusak">Rusak</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Lokasi Aset</label>
-                                <select id="invLokasi" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"></select>
+                                <select id="invLokasi" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50"></select>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">Simpan Data ke Sistem</button>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">Simpan Data ke Supabase</button>
                     </form>
                 </div>
             </section>
 
             <section id="tab-lihat" class="tab-content hidden">
                 <header class="mb-6">
-                    <h2 class="text-3xl font-bold text-slate-900">Eksplorasi & Pencarian Aset</h2>
-                    <p class="text-slate-500">Gunakan filter pencarian untuk memetakan perangkat</p>
+                    <h2 class="text-3xl font-bold text-slate-900">Pencarian & Manajemen Aset</h2>
                 </header>
                 
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4">
-                    <input type="text" id="cariKeyword" oninput="renderTabelUtama()" placeholder="Cari berdasarkan nomor atau nama perangkat..." class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <select id="filterStatus" onchange="renderTabelUtama()" class="border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                    <input type="text" id="cariKeyword" oninput="renderTabelUtama()" placeholder="Cari nomor atau nama perangkat..." class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none">
+                    <select id="filterStatus" onchange="renderTabelUtama()" class="border border-slate-300 rounded-lg p-2.5 text-sm bg-slate-50">
                         <option value="Semua">Semua Status</option>
                         <option value="Bagus">Bagus</option>
                         <option value="Diperbaiki">Diperbaiki</option>
@@ -121,11 +143,11 @@
                                 <tr class="bg-slate-800 text-white">
                                     <th class="p-4 font-semibold">No. Inventaris</th>
                                     <th class="p-4 font-semibold">Tanggal</th>
-                                    <th class="p-4 font-semibold">Deskripsi Barang</th>
+                                    <th class="p-4 font-semibold">Nama Barang</th>
                                     <th class="p-4 font-semibold">Jenis</th>
                                     <th class="p-4 font-semibold">Status</th>
                                     <th class="p-4 font-semibold">Lokasi</th>
-                                    <th class="p-4 font-semibold text-center">Aksi</th>
+                                    <th class="p-4 font-semibold text-center" id="th-aksi">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelUtamaBody"></tbody>
@@ -136,25 +158,25 @@
 
             <section id="tab-pengaturan" class="tab-content hidden">
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-slate-900">Konfigurasi Parameter Sistem</h2>
-                    <p class="text-slate-500">Kelola opsi dinamis untuk Dropdown Jenis Barang dan Lokasi</p>
+                    <h2 class="text-3xl font-bold text-slate-900">Pengaturan Opsi (Khusus Admin)</h2>
+                    <p id="msg-restrict" class="text-red-500 font-semibold hidden">⚠️ Anda tidak memiliki izin untuk mengedit opsi ini.</p>
                 </header>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="wrapper-pengaturan">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Manajemen Jenis Barang</h3>
+                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Jenis Barang</h3>
                         <form id="formTambahJenis" class="flex gap-2 mb-4">
-                            <input type="text" id="inputJenisBaru" required placeholder="Nama jenis baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tambah</button>
+                            <input type="text" id="inputJenisBaru" required placeholder="Jenis baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm">
+                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah</button>
                         </form>
                         <ul id="listJenis" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></ul>
                     </div>
 
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Manajemen Lokasi Aset</h3>
+                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Lokasi Aset</h3>
                         <form id="formTambahLokasi" class="flex gap-2 mb-4">
-                            <input type="text" id="inputLokasiBaru" required placeholder="Nama lokasi baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tambah</button>
+                            <input type="text" id="inputLokasiBaru" required placeholder="Lokasi baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm">
+                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah</button>
                         </form>
                         <ul id="listLokasi" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></ul>
                     </div>
@@ -165,22 +187,121 @@
     </div>
 
     <script>
-        // Data Bawaan Sistem (Default State) jika LocalStorage kosong
-        const defaultJenis = ['Laptop', 'CPU', 'UPS', 'Monitor', 'Mouse', 'Keyboard', 'Headset', 'Meja'];
-        const defaultLokasi = ['Lab Komputer A', 'Lab Komputer B', 'Ruang Guru', 'Gudang Utama'];
+        // MASUKKAN KREDENSIAL SUPABASE ANDA DI SINI
+        const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby";
 
-        // Inisialisasi Database Lokal
-        let dbBarang = JSON.parse(localStorage.getItem('dbBarang')) || [];
-        let dbJenis = JSON.parse(localStorage.getItem('dbJenis')) || defaultJenis;
-        let dbLokasi = JSON.parse(localStorage.getItem('dbLokasi')) || defaultLokasi;
+        const supabase = @supabase/supabase-js.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function sinkronisasiStorage() {
-            localStorage.setItem('dbBarang', JSON.stringify(dbBarang));
-            localStorage.setItem('dbJenis', JSON.stringify(dbJenis));
-            localStorage.setItem('dbLokasi', JSON.stringify(dbLokasi));
+        let userSesi = null;
+        let userRole = 'staf'; // Default role
+        let dbBarang = [];
+        let dbJenis = [];
+        let dbLokasi = [];
+
+        // 1. MANAJEMEN AUTENTIKASI (LOGIN / SIGN UP)
+        const formAuth = document.getElementById('formAuth');
+        const btnSignUp = document.getElementById('btnSignUp');
+
+        // Memantau Status Login Aktif
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                userSesi = session.user;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('user-email-display').innerText = userSesi.email;
+                
+                await dapatkanRoleUser();
+                await sinkronkanSemuaData();
+            } else {
+                userSesi = null;
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('main-screen').classList.add('hidden');
+            }
+        });
+
+        // Event: Registrasi Pengguna Baru
+        btnSignUp.addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            if(!email || !password) return alert('Isi email dan password.');
+
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) return alert('Gagal Daftar: ' + error.message);
+            
+            // Catat role default 'staf' di tabel user_roles
+            await supabase.from('user_roles').insert({ user_id: data.user.id, email: email, role: 'staf' });
+            alert('Registrasi berhasil! Silakan cek email masuk untuk konfirmasi atau langsung gunakan akun.');
+        });
+
+        // Event: Login Pengguna
+        formAuth.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) alert('Gagal Masuk: ' + error.message);
+        });
+
+        async function logout() {
+            await supabase.auth.signOut();
         }
 
-        // Fungsi Navigasi Tab SPA
+        // 2. MENDAPATKAN DAN MENERAPKAN ROLE AKSES (RBAC)
+        async function dapatkanRoleUser() {
+            const { data, error } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', userSesi.id)
+                .single();
+            
+            if (data) {
+                userRole = data.role;
+                document.getElementById('user-role-display').innerText = `Role: ${userRole.toUpperCase()}`;
+                batasiAksesUI();
+            }
+        }
+
+        function batasiAksesUI() {
+            // Pengaturan Batasan Hak Akses UI (Client-Side Protection)
+            if (userRole === 'staf') {
+                // Staf tidak boleh hapus barang
+                document.getElementById('th-aksi').classList.add('hidden');
+                // Staf tidak boleh ubah opsi Jenis/Lokasi
+                document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
+                document.getElementById('msg-restrict').classList.remove('hidden');
+            } else if (userRole === 'asisten') {
+                // Asisten boleh menginput data tapi tidak boleh merusak konfigurasi parameter
+                document.getElementById('th-aksi').classList.remove('hidden');
+                document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
+                document.getElementById('msg-restrict').classList.remove('hidden');
+            } else {
+                // Admin memiliki akses penuh terhadap semua kontrol
+                document.getElementById('th-aksi').classList.remove('hidden');
+                document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
+                document.getElementById('msg-restrict').classList.add('hidden');
+            }
+        }
+
+        // 3. OPERASI CRUD DATABASE DENGAN SUPABASE
+        async function sinkronkanSemuaData() {
+            // Ambil data Jenis
+            const { data: jenis } = await supabase.from('jenis_barang').select('*');
+            dbJenis = jenis || [];
+            
+            // Ambil data Lokasi
+            const { data: lokasi } = await supabase.from('lokasi_barang').select('*');
+            dbLokasi = lokasi || [];
+
+            // Ambil data Utama Inventaris
+            const { data: barang } = await supabase.from('inventaris').select('*').order('created_at', { ascending: false });
+            dbBarang = barang || [];
+
+            jalankanSistemUI();
+        }
+
+        // Navigasi Tab SPA
         function pindahTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
@@ -191,89 +312,99 @@
             });
             const activeBtn = document.getElementById(`btn-${tabId}`);
             activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
-            activeBtn.add('bg-slate-800', 'text-white');
-
-            // Segarkan data visual setiap kali tab berpindah
-            jalankanSistem();
+            activeBtn.classList.add('bg-slate-800', 'text-white');
         }
 
-        // Render Opsi Dropdown secara Dinamis
+        // Render Dropdown untuk Input Barang
         function renderDropdowns() {
             const selectJenis = document.getElementById('invJenis');
             const selectLokasi = document.getElementById('invLokasi');
             
-            selectJenis.innerHTML = dbJenis.map(j => `<option value="${j}">${j}</option>`).join('');
-            selectLokasi.innerHTML = dbLokasi.map(l => `<option value="${l}">${l}</option>`).join('');
+            selectJenis.innerHTML = dbJenis.map(j => `<option value="${j.nama}">${j.nama}</option>`).join('');
+            selectLokasi.innerHTML = dbLokasi.map(l => `<option value="${l.nama}">${l.nama}</option>`).join('');
         }
 
-        // Render Panel CRUD Opsi Pengaturan
+        // Render Opsi Dropdown di Pengaturan (CRUD)
         function renderPengaturan() {
             const listJ = document.getElementById('listJenis');
             const listL = document.getElementById('listLokasi');
 
-            listJ.innerHTML = dbJenis.map((j, i) => `
+            listJ.innerHTML = dbJenis.map(j => `
                 <li class="flex justify-between items-center py-2.5">
-                    <span class="text-sm font-medium text-slate-700">${j}</span>
-                    <button onclick="hapusOpsi('jenis', ${i})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                    <span class="text-sm font-medium text-slate-700">${j.nama}</span>
+                    <button onclick="hapusOpsi('jenis', ${j.id})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </li>
             `).join('');
 
-            listL.innerHTML = dbLokasi.map((l, i) => `
+            listL.innerHTML = dbLokasi.map(l => `
                 <li class="flex justify-between items-center py-2.5">
-                    <span class="text-sm font-medium text-slate-700">${l}</span>
-                    <button onclick="hapusOpsi('lokasi', ${i})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                    <span class="text-sm font-medium text-slate-700">${l.nama}</span>
+                    <button onclick="hapusOpsi('lokasi', ${l.id})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </li>
             `).join('');
         }
 
-        // Fungsi Tambah dan Hapus Opsi Dinamis
-        document.getElementById('formTambahJenis').addEventListener('submit', function(e) {
+        // Tambah Opsi Baru ke Cloud Database
+        document.getElementById('formTambahJenis').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const val = document.getElementById('inputJenisBaru').value.trim();
-            if(val && !dbJenis.includes(val)) { dbJenis.push(val); sinkronisasiStorage(); this.reset(); jalankanSistem(); }
-        });
-
-        document.getElementById('formTambahLokasi').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const val = document.getElementById('inputLokasiBaru').value.trim();
-            if(val && !dbLokasi.includes(val)) { dbLokasi.push(val); sinkronisasiStorage(); this.reset(); jalankanSistem(); }
-        });
-
-        function hapusOpsi(tipe, index) {
-            if(tipe === 'jenis') dbJenis.splice(index, 1);
-            if(tipe === 'lokasi') dbLokasi.splice(index, 1);
-            sinkronisasiStorage();
-            jalankanSistem();
-        }
-
-        // Manipulasi Data Barang Utama (Create & Read)
-        document.getElementById('formBarang').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const barangBaru = {
-                nomor: document.getElementById('invNomor').value,
-                tanggal: document.getElementById('invTanggal').value,
-                nama: document.getElementById('invNama').value,
-                jenis: document.getElementById('invJenis').value,
-                status: document.getElementById('invStatus').value,
-                lokasi: document.getElementById('invLokasi').value
-            };
-            dbBarang.push(barangBaru);
-            sinkronisasiStorage();
+            const nama = document.getElementById('inputJenisBaru').value.trim();
+            const { error } = await supabase.from('jenis_barang').insert({ nama });
+            if (error) alert(error.message);
             this.reset();
-            alert('Aset berhasil disimpan ke database lokal!');
-            pindahTab('tab-lihat');
+            await sinkronkanSemuaData();
         });
 
-        function hapusBarang(index) {
-            if(confirm('Apakah Anda yakin ingin menghapus aset ini dari catatan inventaris?')) {
-                dbBarang.splice(index, 1);
-                sinkronisasiStorage();
-                renderTabelUtama();
-                hitungKalkulasiDashboard();
+        document.getElementById('formTambahLokasi').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nama = document.getElementById('inputLokasiBaru').value.trim();
+            const { error } = await supabase.from('lokasi_barang').insert({ nama });
+            if (error) alert(error.message);
+            this.reset();
+            await sinkronkanSemuaData();
+        });
+
+        async function hapusOpsi(tipe, id) {
+            if (confirm('Menghapus parameter ini berisiko memutus relasi pada aset yang terdaftar.')) {
+                const table = tipe === 'jenis' ? 'jenis_barang' : 'lokasi_barang';
+                const { error } = await supabase.from(table).delete().eq('id', id);
+                if (error) alert(error.message);
+                await sinkronkanSemuaData();
             }
         }
 
-        // Render Tabel Utama dengan Filter & Fitur Pencarian Real-Time
+        // Tambah Data Inventaris ke Supabase
+        document.getElementById('formBarang').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                nomor_inventaris: document.getElementById('invNomor').value,
+                tanggal_inventaris: document.getElementById('invTanggal').value,
+                nama_barang: document.getElementById('invNama').value,
+                jenis_barang: document.getElementById('invJenis').value,
+                status: document.getElementById('invStatus').value,
+                lokasi: document.getElementById('invLokasi').value
+            };
+
+            const { error } = await supabase.from('inventaris').insert(payload);
+            if (error) {
+                alert('Gagal menyimpan: ' + error.message);
+            } else {
+                alert('Aset tersimpan di Database Supabase!');
+                this.reset();
+                await sinkronkanSemuaData();
+                pindahTab('tab-lihat');
+            }
+        });
+
+        // Hapus Data Inventaris dari Supabase
+        async function hapusBarang(id) {
+            if (confirm('Yakin ingin menghapus aset ini secara permanen dari server?')) {
+                const { error } = await supabase.from('inventaris').delete().eq('id', id);
+                if (error) alert(error.message);
+                await sinkronkanSemuaData();
+            }
+        }
+
+        // Render Tabel Pencarian Real-Time
         function renderTabelUtama() {
             const tbody = document.getElementById('tabelUtamaBody');
             const keyword = document.getElementById('cariKeyword').value.toLowerCase();
@@ -281,8 +412,8 @@
 
             tbody.innerHTML = '';
 
-            dbBarang.forEach((item, index) => {
-                const cocokKeyword = item.nomor.toLowerCase().includes(keyword) || item.nama.toLowerCase().includes(keyword);
+            dbBarang.forEach(item => {
+                const cocokKeyword = item.nomor_inventaris.toLowerCase().includes(keyword) || item.nama_barang.toLowerCase().includes(keyword);
                 const cocokStatus = filterSt === 'Semua' || item.status === filterSt;
 
                 if (cocokKeyword && cocokStatus) {
@@ -290,17 +421,18 @@
                     if(item.status === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
                     if(item.status === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
 
+                    const actionBtn = userRole !== 'staf' ? 
+                        `<td class="p-4 text-center"><button onclick="hapusBarang('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold">Hapus</button></td>` : '';
+
                     const row = `
                         <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                            <td class="p-4 font-mono font-bold text-slate-700">${item.nomor}</td>
-                            <td class="p-4 text-slate-600">${item.tanggal}</td>
-                            <td class="p-4 font-medium text-slate-900">${item.nama}</td>
-                            <td class="p-4"><span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md border">${item.jenis}</span></td>
+                            <td class="p-4 font-mono font-bold text-slate-700">${item.nomor_inventaris}</td>
+                            <td class="p-4 text-slate-600">${item.tanggal_inventaris}</td>
+                            <td class="p-4 font-medium text-slate-900">${item.nama_barang}</td>
+                            <td class="p-4"><span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md border">${item.jenis_barang}</span></td>
                             <td class="p-4"><span class="${warnaBadge} text-xs px-2.5 py-1 rounded-full font-semibold">${item.status}</span></td>
                             <td class="p-4 text-slate-600">${item.lokasi}</td>
-                            <td class="p-4 text-center">
-                                <button onclick="hapusBarang(${index})" class="text-xs text-red-600 hover:text-red-800 font-bold">Hapus</button>
-                            </td>
+                            ${actionBtn}
                         </tr>
                     `;
                     tbody.insertAdjacentHTML('beforeend', row);
@@ -308,7 +440,7 @@
             });
         }
 
-        // Kalkulasi Statistik Dashboard secara Real-Time
+        // Hitung Total Metrik untuk Dashboard
         function hitungKalkulasiDashboard() {
             document.getElementById('stat-total').innerText = `${dbBarang.length} Unit`;
             document.getElementById('stat-bagus').innerText = `${dbBarang.filter(i => i.status === 'Bagus').length} Unit`;
@@ -316,16 +448,13 @@
             document.getElementById('stat-rusak').innerText = `${dbBarang.filter(i => i.status === 'Rusak').length} Unit`;
         }
 
-        // Orkestrator Utama Sistem
-        function jalankanSistem() {
+        // Orkestrator untuk menyegarkan Tampilan
+        function jalankanSistemUI() {
             renderDropdowns();
             renderPengaturan();
             renderTabelUtama();
             hitungKalkulasiDashboard();
         }
-
-        // Eksekusi Awal saat Halaman Dimuat
-        jalankanSistem();
     </script>
 </body>
 </html>
