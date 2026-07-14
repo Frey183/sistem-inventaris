@@ -249,7 +249,7 @@
         let dbJenis = [];
         let dbLokasi = [];
         let dbUserRoles = []; 
-        let chartAsetInstance = null; // Variabel untuk menyimpan objek diagram
+        let chartAsetInstance = null;
 
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (session) {
@@ -470,6 +470,7 @@
             }
         }
 
+        // Perbaikan Utama: Di sini fungsi pindahTab() telah dihapus demi kelancaran UX input data masal
         document.getElementById('formBarang').addEventListener('submit', async function(e) {
             e.preventDefault();
             const payload = {
@@ -486,9 +487,8 @@
                 alert('Gagal menyimpan: ' + error.message);
             } else {
                 alert('Aset tersimpan di Database Supabase!');
-                this.reset();
-                await sinkronkanSemuaData();
-                pindahTab('tab-lihat');
+                this.reset(); // Formulir dikosongkan otomatis
+                await sinkronkanSemuaData(); // Data latar belakang tetap diperbarui ke server secara asinkron
             }
         });
 
@@ -539,7 +539,6 @@
             });
         }
 
-        // Fungsi Pembaruan Dashboard: Kalkulasi Angka + Rendering Grafik Real-Time
         function hitungKalkulasiDashboard() {
             const total = dbBarang.length;
             const bagus = dbBarang.filter(i => i.status === 'Bagus').length;
@@ -551,22 +550,19 @@
             document.getElementById('stat-diperbaiki').innerText = `${diperbaiki} Unit`;
             document.getElementById('stat-rusak').innerText = `${rusak} Unit`;
 
-            // Mulai Logika Inisialisasi Chart.js
             const ctx = document.getElementById('chartAset').getContext('2d');
             
-            // Hapus instance grafik lama jika ada untuk mencegah tabrakan data visual
             if (chartAsetInstance) {
                 chartAsetInstance.destroy();
             }
 
-            // Gambar Ulang Grafik Donat dengan Data Terbaru
             chartAsetInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Bagus', 'Diperbaiki', 'Rusak'],
                     datasets: [{
                         data: [bagus, diperbaiki, rusak],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Menyesuaikan tema warna Tailwind
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                         borderWidth: 3,
                         borderColor: '#ffffff'
                     }]
@@ -583,7 +579,6 @@
                                 font: { size: 11, weight: 'bold' }
                             }
                         },
-                        // Konfigurasi Tooltip untuk Menampilkan Persentase Otomatis
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
