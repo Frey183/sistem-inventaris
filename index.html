@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Inventarisasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 p-6">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Sistem Inventaris</h1>
+            <p class="text-slate-500">Manajemen data aset dan perangkat keras</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-1 h-fit">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Tambah Barang</h2>
+                <form id="formInventaris" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nama Perangkat</label>
+                        <input type="text" id="namaBarang" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Kategori</label>
+                        <select id="kategoriBarang" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="Laptop/PC">Laptop/PC</option>
+                            <option value="Jaringan">Jaringan</option>
+                            <option value="Aksesoris">Aksesoris</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Jumlah</label>
+                        <input type="number" id="jumlahBarang" required min="1" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Simpan Data
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-1 md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Daftar Aset</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-sm">
+                                <th class="p-3 border-b">Nama Perangkat</th>
+                                <th class="p-3 border-b">Kategori</th>
+                                <th class="p-3 border-b">Jumlah</th>
+                                <th class="p-3 border-b text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelInventaris">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mengambil elemen HTML untuk dimanipulasi
+        const form = document.getElementById('formInventaris');
+        const tabel = document.getElementById('tabelInventaris');
+
+        // Fungsi untuk mengambil data dari LocalStorage
+        function ambilData() {
+            const data = localStorage.getItem('dataInventaris');
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Fungsi untuk merender data ke dalam tabel
+        function renderTabel() {
+            const data = ambilData();
+            tabel.innerHTML = ''; // Kosongkan tabel sebelum diisi ulang
+
+            data.forEach((item, index) => {
+                const row = `
+                    <tr class="border-b hover:bg-slate-50 transition duration-150">
+                        <td class="p-3 font-medium">${item.nama}</td>
+                        <td class="p-3">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${item.kategori}</span>
+                        </td>
+                        <td class="p-3">${item.jumlah} Unit</td>
+                        <td class="p-3 text-center">
+                            <button onclick="hapusData(${index})" class="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+                tabel.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Event Listener untuk menangani saat formulir dikirim
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Mencegah halaman termuat ulang (refresh)
+
+            // Mengambil nilai dari inputan
+            const nama = document.getElementById('namaBarang').value;
+            const kategori = document.getElementById('kategoriBarang').value;
+            const jumlah = document.getElementById('jumlahBarang').value;
+
+            // Memasukkan data baru ke array yang sudah ada
+            const dataBaru = { nama, kategori, jumlah };
+            const dataLama = ambilData();
+            dataLama.push(dataBaru);
+
+            // Menyimpan kembali ke LocalStorage dalam bentuk teks (JSON)
+            localStorage.setItem('dataInventaris', JSON.stringify(dataLama));
+
+            // Mereset formulir dan memperbarui tampilan tabel
+            form.reset();
+            renderTabel();
+        });
+
+        // Fungsi untuk menghapus data berdasarkan indeksnya
+        function hapusData(index) {
+            const data = ambilData();
+            data.splice(index, 1); // Menghapus 1 elemen pada indeks yang dipilih
+            localStorage.setItem('dataInventaris', JSON.stringify(data));
+            renderTabel();
+        }
+
+        // Memuat tabel saat halaman pertama kali dibuka
+        renderTabel();
+    </script>
+</body>
+</html>
