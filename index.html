@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-800">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 relative">
 
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200 max-w-md w-full">
@@ -237,6 +237,34 @@
         </main>
     </div>
 
+    <div id="modalEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-900">⚙️ Perbarui Status Barang</h3>
+                <button onclick="tutupModalEdit()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <form id="formEditStatus" class="space-y-4">
+                <input type="hidden" id="editItemId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nama Barang</label>
+                    <input type="text" id="editItemNama" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-600 outline-none select-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Status Baru</label>
+                    <select id="editItemStatus" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="Bagus">Bagus</option>
+                        <option value="Diperbaiki">Diperbaiki</option>
+                        <option value="Rusak">Rusak</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://dzmsmnfzlacosnohiqep.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ERGP1hnLtQxLwy9UcHCSGA_Q_UuMxby";
@@ -276,7 +304,7 @@
             if (error) return alert('Gagal Daftar: ' + error.message);
             
             await supabaseClient.from('user_roles').insert({ user_id: data.user.id, email: email, role: 'staf' });
-            alert('Registrasi berhasil! Silakan cek email masuk untuk konfirmasi atau langsung gunakan akun.');
+            alert('Registrasi berhasil! Silakan gunakan akun.');
         });
 
         formAuth.addEventListener('submit', async (e) => {
@@ -314,16 +342,17 @@
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
                 if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
-            } else if (userRole === 'asisten') {
+            } else {
                 document.getElementById('th-aksi').classList.remove('hidden');
-                document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
-                document.getElementById('msg-restrict').classList.remove('hidden');
-                if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
-            } else if (userRole === 'admin') {
-                document.getElementById('th-aksi').classList.remove('hidden');
-                document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
-                document.getElementById('msg-restrict').classList.add('hidden');
-                if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
+                if (userRole === 'admin') {
+                    document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
+                    document.getElementById('msg-restrict').classList.add('hidden');
+                    if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
+                } else {
+                    document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
+                    document.getElementById('msg-restrict').classList.remove('hidden');
+                    if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
+                }
             }
         }
 
@@ -423,7 +452,7 @@
 
         async function ubahRoleUser(userId, roleBaru) {
             if (userId === userSesi.id && roleBaru !== 'admin') {
-                const yakin = confirm('Anda mencoba menurunkan hak akses Anda sendiri. Anda tidak akan dapat mengakses tab ini lagi jika disimpan. Lanjutkan?');
+                const yakin = confirm('Anda mencoba menurunkan hak akses Anda sendiri. Lanjutkan?');
                 if (!yakin) return;
             }
 
@@ -436,9 +465,7 @@
                 alert('Gagal mengubah peran: ' + error.message);
             } else {
                 alert('Peran pengguna berhasil diperbarui!');
-                if (userId === userSesi.id) {
-                    await dapatkanRoleUser(); 
-                }
+                if (userId === userSesi.id) await dapatkanRoleUser(); 
                 await sinkronkanSemuaData(); 
             }
         }
@@ -462,7 +489,7 @@
         });
 
         async function hapusOpsi(tipe, id) {
-            if (confirm('Menghapus parameter ini berisiko memutus relasi pada aset yang terdaftar.')) {
+            if (confirm('Menghapus parameter ini berisiko memutus relasi pada aset.')) {
                 const table = tipe === 'jenis' ? 'jenis_barang' : 'lokasi_barang';
                 const { error } = await supabaseClient.from(table).delete().eq('id', id);
                 if (error) alert(error.message);
@@ -470,7 +497,6 @@
             }
         }
 
-        // Perbaikan Utama: Di sini fungsi pindahTab() telah dihapus demi kelancaran UX input data masal
         document.getElementById('formBarang').addEventListener('submit', async function(e) {
             e.preventDefault();
             const payload = {
@@ -487,8 +513,8 @@
                 alert('Gagal menyimpan: ' + error.message);
             } else {
                 alert('Aset tersimpan di Database Supabase!');
-                this.reset(); // Formulir dikosongkan otomatis
-                await sinkronkanSemuaData(); // Data latar belakang tetap diperbarui ke server secara asinkron
+                this.reset();
+                await sinkronkanSemuaData();
             }
         });
 
@@ -499,6 +525,38 @@
                 await sinkronkanSemuaData();
             }
         }
+
+        // FUNGSI KONTROL MODAL EDIT STATUS
+        function bukaModalEdit(id, nama, statusSekarang) {
+            document.getElementById('editItemId').value = id;
+            document.getElementById('editItemNama').value = nama;
+            document.getElementById('editItemStatus').value = statusSekarang;
+            document.getElementById('modalEdit').classList.remove('hidden');
+        }
+
+        function tutupModalEdit() {
+            document.getElementById('modalEdit').classList.add('hidden');
+            document.getElementById('formEditStatus').reset();
+        }
+
+        // SUBMIT FORM EDIT STATUS KE SUPABASE
+        document.getElementById('formEditStatus').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editItemId').value;
+            const statusBaru = document.getElementById('editItemStatus').value;
+
+            const { error } = await supabaseClient
+                .from('inventaris')
+                .update({ status: statusBaru })
+                .eq('id', id);
+
+            if(error) {
+                alert("Gagal memperbarui status: " + error.message);
+            } else {
+                tutupModalEdit();
+                await sinkronkanSemuaData(); // Reload UI & chart
+            }
+        });
 
         function renderTabelUtama() {
             const tbody = document.getElementById('tabelUtamaBody');
@@ -520,8 +578,12 @@
                     if(item.status === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
                     if(item.status === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
 
+                    // Tambahan Aksi: Menggabungkan tombol Edit dan Hapus ke dalam satu wadah aksi terintegrasi
                     const actionBtn = userRole !== 'staf' ? 
-                        `<td class="p-4 text-center"><button onclick="hapusBarang('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold">Hapus</button></td>` : '';
+                        `<td class="p-4 text-center flex items-center justify-center gap-3">
+                            <button onclick="bukaModalEdit('${item.id}', '${item.nama_barang}', '${item.status}')" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded">Edit</button>
+                            <button onclick="hapusBarang('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 hover:bg-red-100 px-2 py-1 rounded">Hapus</button>
+                         </td>` : '';
 
                     const row = `
                         <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
