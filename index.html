@@ -3,128 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Inventarisasi</title>
+    <title>Sistem Inventaris Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800 p-6">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-slate-900">Sistem Inventaris</h1>
-            <p class="text-slate-500">Manajemen data aset dan perangkat keras</p>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-1 h-fit">
-                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Tambah Barang</h2>
-                <form id="formInventaris" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Nama Perangkat</label>
-                        <input type="text" id="namaBarang" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Kategori</label>
-                        <select id="kategoriBarang" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="Laptop/PC">Laptop/PC</option>
-                            <option value="Jaringan">Jaringan</option>
-                            <option value="Aksesoris">Aksesoris</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Jumlah</label>
-                        <input type="number" id="jumlahBarang" required min="1" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition duration-200">
-                        Simpan Data
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 col-span-1 md:col-span-2">
-                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Daftar Aset</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-600 text-sm">
-                                <th class="p-3 border-b">Nama Perangkat</th>
-                                <th class="p-3 border-b">Kategori</th>
-                                <th class="p-3 border-b">Jumlah</th>
-                                <th class="p-3 border-b text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelInventaris">
-                            </tbody>
-                    </table>
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-64 bg-slate-900 text-white p-6 flex flex-col justify-between">
+            <div>
+                <div class="mb-8">
+                    <h1 class="text-2xl font-bold tracking-tight text-blue-400">InvManager v2</h1>
+                    <p class="text-xs text-slate-400">Sistem Inventarisasi Aset</p>
                 </div>
+                <nav class="space-y-2">
+                    <button onclick="pindahTab('tab-dashboard')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition bg-slate-800 text-white" id="btn-tab-dashboard">📊 Dashboard</button>
+                    <button onclick="pindahTab('tab-input')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-input">📥 Input Barang</button>
+                    <button onclick="pindahTab('tab-lihat')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-lihat">🔍 Daftar & Cari</button>
+                    <button onclick="pindahTab('tab-pengaturan')" class="nav-btn w-full text-left px-4 py-2.5 rounded-lg font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white" id="btn-tab-pengaturan">⚙️ Pengaturan Opsi</button>
+                </nav>
             </div>
-        </div>
+            <div class="text-xs text-slate-500 border-t border-slate-800 pt-4 mt-6">
+                Mode: Vibe Coding Cloud
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            
+            <section id="tab-dashboard" class="tab-content">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900">Ringkasan Data Aset</h2>
+                    <p class="text-slate-500">Kondisi riil inventarisasi saat ini</p>
+                </header>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                        <p class="text-sm font-medium text-slate-500 uppercase">Total Barang</p>
+                        <p class="text-3xl font-bold text-slate-900 mt-2" id="stat-total">0 Unit</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                        <p class="text-sm font-medium text-slate-500 uppercase">Kondisi Bagus</p>
+                        <p class="text-3xl font-bold text-emerald-600 mt-2" id="stat-bagus">0 Unit</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                        <p class="text-sm font-medium text-slate-500 uppercase">Sedang Diperbaiki</p>
+                        <p class="text-3xl font-bold text-amber-500 mt-2" id="stat-diperbaiki">0 Unit</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                        <p class="text-sm font-medium text-slate-500 uppercase">Rusak Total</p>
+                        <p class="text-3xl font-bold text-red-600 mt-2" id="stat-rusak">0 Unit</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-input" class="tab-content hidden">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900">Registrasi Inventaris Baru</h2>
+                    <p class="text-slate-500">Pastikan nomor dan spesifikasi data telah sesuai</p>
+                </header>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl">
+                    <form id="formBarang" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Nomor Inventaris</label>
+                                <input type="text" id="invNomor" required placeholder="INV-2026-001" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal Inventaris</label>
+                                <input type="date" id="invTanggal" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Perangkat / Barang</label>
+                            <input type="text" id="invNama" required placeholder="Contoh: Core i5, RAM 16GB" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Jenis Barang</label>
+                                <select id="invJenis" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+                                <select id="invStatus" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                                    <option value="Bagus">Bagus</option>
+                                    <option value="Diperbaiki">Diperbaiki</option>
+                                    <option value="Rusak">Rusak / Tidak dapat diperbaiki</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Lokasi Aset</label>
+                                <select id="invLokasi" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">Simpan Data ke Sistem</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="tab-lihat" class="tab-content hidden">
+                <header class="mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900">Eksplorasi & Pencarian Aset</h2>
+                    <p class="text-slate-500">Gunakan filter pencarian untuk memetakan perangkat</p>
+                </header>
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="cariKeyword" oninput="renderTabelUtama()" placeholder="Cari berdasarkan nomor atau nama perangkat..." class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="filterStatus" onchange="renderTabelUtama()" class="border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                        <option value="Semua">Semua Status</option>
+                        <option value="Bagus">Bagus</option>
+                        <option value="Diperbaiki">Diperbaiki</option>
+                        <option value="Rusak">Rusak</option>
+                    </select>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-800 text-white">
+                                    <th class="p-4 font-semibold">No. Inventaris</th>
+                                    <th class="p-4 font-semibold">Tanggal</th>
+                                    <th class="p-4 font-semibold">Deskripsi Barang</th>
+                                    <th class="p-4 font-semibold">Jenis</th>
+                                    <th class="p-4 font-semibold">Status</th>
+                                    <th class="p-4 font-semibold">Lokasi</th>
+                                    <th class="p-4 font-semibold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelUtamaBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-pengaturan" class="tab-content hidden">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900">Konfigurasi Parameter Sistem</h2>
+                    <p class="text-slate-500">Kelola opsi dinamis untuk Dropdown Jenis Barang dan Lokasi</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Manajemen Jenis Barang</h3>
+                        <form id="formTambahJenis" class="flex gap-2 mb-4">
+                            <input type="text" id="inputJenisBaru" required placeholder="Nama jenis baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tambah</button>
+                        </form>
+                        <ul id="listJenis" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Manajemen Lokasi Aset</h3>
+                        <form id="formTambahLokasi" class="flex gap-2 mb-4">
+                            <input type="text" id="inputLokasiBaru" required placeholder="Nama lokasi baru..." class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tambah</button>
+                        </form>
+                        <ul id="listLokasi" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
     <script>
-        // Mengambil elemen HTML untuk dimanipulasi
-        const form = document.getElementById('formInventaris');
-        const tabel = document.getElementById('tabelInventaris');
+        // Data Bawaan Sistem (Default State) jika LocalStorage kosong
+        const defaultJenis = ['Laptop', 'CPU', 'UPS', 'Monitor', 'Mouse', 'Keyboard', 'Headset', 'Meja'];
+        const defaultLokasi = ['Lab Komputer A', 'Lab Komputer B', 'Ruang Guru', 'Gudang Utama'];
 
-        // Fungsi untuk mengambil data dari LocalStorage
-        function ambilData() {
-            const data = localStorage.getItem('dataInventaris');
-            return data ? JSON.parse(data) : [];
+        // Inisialisasi Database Lokal
+        let dbBarang = JSON.parse(localStorage.getItem('dbBarang')) || [];
+        let dbJenis = JSON.parse(localStorage.getItem('dbJenis')) || defaultJenis;
+        let dbLokasi = JSON.parse(localStorage.getItem('dbLokasi')) || defaultLokasi;
+
+        function sinkronisasiStorage() {
+            localStorage.setItem('dbBarang', JSON.stringify(dbBarang));
+            localStorage.setItem('dbJenis', JSON.stringify(dbJenis));
+            localStorage.setItem('dbLokasi', JSON.stringify(dbLokasi));
         }
 
-        // Fungsi untuk merender data ke dalam tabel
-        function renderTabel() {
-            const data = ambilData();
-            tabel.innerHTML = ''; // Kosongkan tabel sebelum diisi ulang
+        // Fungsi Navigasi Tab SPA
+        function pindahTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+            });
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            activeBtn.add('bg-slate-800', 'text-white');
 
-            data.forEach((item, index) => {
-                const row = `
-                    <tr class="border-b hover:bg-slate-50 transition duration-150">
-                        <td class="p-3 font-medium">${item.nama}</td>
-                        <td class="p-3">
-                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${item.kategori}</span>
-                        </td>
-                        <td class="p-3">${item.jumlah} Unit</td>
-                        <td class="p-3 text-center">
-                            <button onclick="hapusData(${index})" class="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>
-                        </td>
-                    </tr>
-                `;
-                tabel.insertAdjacentHTML('beforeend', row);
+            // Segarkan data visual setiap kali tab berpindah
+            jalankanSistem();
+        }
+
+        // Render Opsi Dropdown secara Dinamis
+        function renderDropdowns() {
+            const selectJenis = document.getElementById('invJenis');
+            const selectLokasi = document.getElementById('invLokasi');
+            
+            selectJenis.innerHTML = dbJenis.map(j => `<option value="${j}">${j}</option>`).join('');
+            selectLokasi.innerHTML = dbLokasi.map(l => `<option value="${l}">${l}</option>`).join('');
+        }
+
+        // Render Panel CRUD Opsi Pengaturan
+        function renderPengaturan() {
+            const listJ = document.getElementById('listJenis');
+            const listL = document.getElementById('listLokasi');
+
+            listJ.innerHTML = dbJenis.map((j, i) => `
+                <li class="flex justify-between items-center py-2.5">
+                    <span class="text-sm font-medium text-slate-700">${j}</span>
+                    <button onclick="hapusOpsi('jenis', ${i})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                </li>
+            `).join('');
+
+            listL.innerHTML = dbLokasi.map((l, i) => `
+                <li class="flex justify-between items-center py-2.5">
+                    <span class="text-sm font-medium text-slate-700">${l}</span>
+                    <button onclick="hapusOpsi('lokasi', ${i})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                </li>
+            `).join('');
+        }
+
+        // Fungsi Tambah dan Hapus Opsi Dinamis
+        document.getElementById('formTambahJenis').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const val = document.getElementById('inputJenisBaru').value.trim();
+            if(val && !dbJenis.includes(val)) { dbJenis.push(val); sinkronisasiStorage(); this.reset(); jalankanSistem(); }
+        });
+
+        document.getElementById('formTambahLokasi').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const val = document.getElementById('inputLokasiBaru').value.trim();
+            if(val && !dbLokasi.includes(val)) { dbLokasi.push(val); sinkronisasiStorage(); this.reset(); jalankanSistem(); }
+        });
+
+        function hapusOpsi(tipe, index) {
+            if(tipe === 'jenis') dbJenis.splice(index, 1);
+            if(tipe === 'lokasi') dbLokasi.splice(index, 1);
+            sinkronisasiStorage();
+            jalankanSistem();
+        }
+
+        // Manipulasi Data Barang Utama (Create & Read)
+        document.getElementById('formBarang').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const barangBaru = {
+                nomor: document.getElementById('invNomor').value,
+                tanggal: document.getElementById('invTanggal').value,
+                nama: document.getElementById('invNama').value,
+                jenis: document.getElementById('invJenis').value,
+                status: document.getElementById('invStatus').value,
+                lokasi: document.getElementById('invLokasi').value
+            };
+            dbBarang.push(barangBaru);
+            sinkronisasiStorage();
+            this.reset();
+            alert('Aset berhasil disimpan ke database lokal!');
+            pindahTab('tab-lihat');
+        });
+
+        function hapusBarang(index) {
+            if(confirm('Apakah Anda yakin ingin menghapus aset ini dari catatan inventaris?')) {
+                dbBarang.splice(index, 1);
+                sinkronisasiStorage();
+                renderTabelUtama();
+                hitungKalkulasiDashboard();
+            }
+        }
+
+        // Render Tabel Utama dengan Filter & Fitur Pencarian Real-Time
+        function renderTabelUtama() {
+            const tbody = document.getElementById('tabelUtamaBody');
+            const keyword = document.getElementById('cariKeyword').value.toLowerCase();
+            const filterSt = document.getElementById('filterStatus').value;
+
+            tbody.innerHTML = '';
+
+            dbBarang.forEach((item, index) => {
+                const cocokKeyword = item.nomor.toLowerCase().includes(keyword) || item.nama.toLowerCase().includes(keyword);
+                const cocokStatus = filterSt === 'Semua' || item.status === filterSt;
+
+                if (cocokKeyword && cocokStatus) {
+                    let warnaBadge = 'bg-emerald-100 text-emerald-800';
+                    if(item.status === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
+                    if(item.status === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
+
+                    const row = `
+                        <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
+                            <td class="p-4 font-mono font-bold text-slate-700">${item.nomor}</td>
+                            <td class="p-4 text-slate-600">${item.tanggal}</td>
+                            <td class="p-4 font-medium text-slate-900">${item.nama}</td>
+                            <td class="p-4"><span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md border">${item.jenis}</span></td>
+                            <td class="p-4"><span class="${warnaBadge} text-xs px-2.5 py-1 rounded-full font-semibold">${item.status}</span></td>
+                            <td class="p-4 text-slate-600">${item.lokasi}</td>
+                            <td class="p-4 text-center">
+                                <button onclick="hapusBarang(${index})" class="text-xs text-red-600 hover:text-red-800 font-bold">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                }
             });
         }
 
-        // Event Listener untuk menangani saat formulir dikirim
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Mencegah halaman termuat ulang (refresh)
-
-            // Mengambil nilai dari inputan
-            const nama = document.getElementById('namaBarang').value;
-            const kategori = document.getElementById('kategoriBarang').value;
-            const jumlah = document.getElementById('jumlahBarang').value;
-
-            // Memasukkan data baru ke array yang sudah ada
-            const dataBaru = { nama, kategori, jumlah };
-            const dataLama = ambilData();
-            dataLama.push(dataBaru);
-
-            // Menyimpan kembali ke LocalStorage dalam bentuk teks (JSON)
-            localStorage.setItem('dataInventaris', JSON.stringify(dataLama));
-
-            // Mereset formulir dan memperbarui tampilan tabel
-            form.reset();
-            renderTabel();
-        });
-
-        // Fungsi untuk menghapus data berdasarkan indeksnya
-        function hapusData(index) {
-            const data = ambilData();
-            data.splice(index, 1); // Menghapus 1 elemen pada indeks yang dipilih
-            localStorage.setItem('dataInventaris', JSON.stringify(data));
-            renderTabel();
+        // Kalkulasi Statistik Dashboard secara Real-Time
+        function hitungKalkulasiDashboard() {
+            document.getElementById('stat-total').innerText = `${dbBarang.length} Unit`;
+            document.getElementById('stat-bagus').innerText = `${dbBarang.filter(i => i.status === 'Bagus').length} Unit`;
+            document.getElementById('stat-diperbaiki').innerText = `${dbBarang.filter(i => i.status === 'Diperbaiki').length} Unit`;
+            document.getElementById('stat-rusak').innerText = `${dbBarang.filter(i => i.status === 'Rusak').length} Unit`;
         }
 
-        // Memuat tabel saat halaman pertama kali dibuka
-        renderTabel();
+        // Orkestrator Utama Sistem
+        function jalankanSistem() {
+            renderDropdowns();
+            renderPengaturan();
+            renderTabelUtama();
+            hitungKalkulasiDashboard();
+        }
+
+        // Eksekusi Awal saat Halaman Dimuat
+        jalankanSistem();
     </script>
 </body>
 </html>
