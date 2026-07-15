@@ -263,7 +263,7 @@
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Simpan & Log Otomatis</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -369,7 +369,6 @@
         function batasiAksesUI() {
             const btnTabPengguna = document.getElementById('btn-tab-pengguna');
             
-            // Hak akses dinamis: Semua role (termasuk staf) kini dapat berinteraksi dengan kolom aksi tabel
             document.getElementById('th-aksi').classList.remove('hidden');
 
             if (userRole === 'staf') {
@@ -560,12 +559,11 @@
             }
         }
 
-        // CONTROL OPEN & CLOSED FOR MODAL EDIT STATUS
         function bukaModalEdit(id, nama, statusSekarang) {
             document.getElementById('editItemId').value = id;
             document.getElementById('editItemNama').value = nama;
             document.getElementById('editItemStatus').value = statusSekarang;
-            document.getElementById('editItemCatatan').value = ''; // Mengosongkan catatan lama
+            document.getElementById('editItemCatatan').value = ''; 
             document.getElementById('modalEdit').classList.remove('hidden');
         }
 
@@ -574,14 +572,12 @@
             document.getElementById('formEditStatus').reset();
         }
 
-        // OTOMATISASI DAN SUBMIT DUA AKSI DATABASE SEKALIGUS
         document.getElementById('formEditStatus').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('editItemId').value;
             const statusBaru = document.getElementById('editItemStatus').value;
             const catatanText = document.getElementById('editItemCatatan').value.trim();
 
-            // AKSI 1: Memperbarui status tabel inventaris utama secara otomatis
             const { error: errorInduk } = await supabaseClient
                 .from('inventaris')
                 .update({ status: statusBaru })
@@ -592,26 +588,24 @@
                 return;
             }
 
-            // AKSI 2: Menyuntikkan log baru ke dalam tabel riwayat perbaikan
             const { error: errorRiwayat } = await supabaseClient
                 .from('riwayat_perbaikan')
                 .insert({
                     inventaris_id: id,
                     catatan_kerusakan: catatanText,
                     status_akhir: statusBaru,
-                    teknisi: userSesi.email, // Rekam jejak email pengubah (disimpan ke kolom teknisi)
-                    tanggal_masuk: new Date().toISOString().split('T')[0] // Mengunci tanggal perubahan hari ini
+                    teknisi: userSesi.email, 
+                    tanggal_masuk: new Date().toISOString().split('T')[0] 
                 });
 
             if(errorRiwayat) {
                 alert("Status ter-update, namun gagal menulis jejak histori: " + errorRiwayat.message);
             } else {
                 tutupModalEdit();
-                await sinkronkanSemuaData(); // Re-sync dashboard, tabel, dan diagram donat
+                await sinkronkanSemuaData(); 
             }
         });
 
-        // CONTROL VIEW TIMELINE LOG PERBAIKAN (DENGAN PROTEKSI PRIVASI ROLE)
         async function bukaModalHistori(id, namaBarang) {
             document.getElementById('historiNamaBarang').innerText = namaBarang;
             
@@ -624,7 +618,6 @@
             const tbody = document.getElementById('tabelHistoriBody');
             tbody.innerHTML = '';
 
-            // Manajemen Privasi: Header "Diubah Oleh" hanya dimunculkan untuk Admin & Asisten
             const headerPengubah = document.querySelector('.id-pengubah-header');
             if (userRole === 'admin' || userRole === 'asisten') {
                 headerPengubah.classList.remove('hidden');
@@ -636,7 +629,6 @@
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 font-medium">Belum ada rekam jejak histori pada perangkat ini.</td></tr>`;
             } else {
                 data.forEach(h => {
-                    // Isi kolom email pengubah dikosongkan/dihapus jika role adalah staf
                     const kolomPengubah = (userRole === 'admin' || userRole === 'asisten') ? 
                         `<td class="p-3 text-slate-600 font-mono font-semibold">${h.teknisi || '-'}</td>` : '';
 
@@ -683,7 +675,6 @@
                     if(item.status === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
                     if(item.status === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
 
-                    // Rekonstruksi Tombol Aksi: Staf mendapatkan izin Edit & Histori, namun diproteksi dari tombol Hapus
                     let actionBtn = '';
                     if (userRole === 'staf') {
                         actionBtn = `<td class="p-4 text-center flex items-center justify-center gap-2">
@@ -772,6 +763,7 @@
             renderDropdowns();
             renderPengaturan();
             hitungKalkulasiDashboard();
+            renderTabelUtama(); // Integrasi render otomatis tanpa refresh manual
         }
     </script>
 </body>
