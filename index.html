@@ -92,7 +92,7 @@
             <section id="tab-input" class="tab-content hidden">
                 <header class="mb-8">
                     <h2 class="text-3xl font-bold text-slate-900">Registrasi Inventaris Baru</h2>
-                    <p class="text-slate-500">Formulir hanya dapat diakses oleh Admin, Asisten, dan Staf</p>
+                    <p class="text-slate-500">Semua peran dapat mendaftarkan perangkat baru</p>
                 </header>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl">
                     <form id="formBarang" class="space-y-5">
@@ -214,7 +214,7 @@
             <section id="tab-pengguna" class="tab-content hidden">
                 <header class="mb-8">
                     <h2 class="text-3xl font-bold text-slate-900">Manajemen Peran Pengguna</h2>
-                    <p class="text-slate-500">Tentukan tingkat hak akses (Admin, Asisten, atau Staf) secara langsung dan real-time.</p>
+                    <p class="text-slate-500">Tentukan tingkat hak akses secara langsung dan real-time.</p>
                 </header>
                 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl">
@@ -240,7 +240,7 @@
     <div id="modalEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-lg font-bold text-slate-900">⚙️ Perbarui Status Barang</h3>
+                <h3 class="text-lg font-bold text-slate-900">⚙️ Perbarui Status & Log Histori</h3>
                 <button onclick="tutupModalEdit()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
             </div>
             <form id="formEditStatus" class="space-y-4">
@@ -257,11 +257,43 @@
                         <option value="Rusak">Rusak</option>
                     </select>
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Catatan Kerusakan / Perubahan</label>
+                    <textarea id="editItemCatatan" required placeholder="Tulis rincian kerusakan perangkat atau alasan perubahan status di sini..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none h-24 resize-none"></textarea>
+                </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Simpan Perubahan</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Simpan & Log Otomatis</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="modalHistori" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 border border-slate-200">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-900">📋 Rekam Jejak Perbaikan & Perubahan</h3>
+                <button onclick="tutupModalHistori()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+            <div class="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <p class="text-sm text-slate-600">Nama Perangkat: <span id="historiNamaBarang" class="font-bold text-slate-900"></span></p>
+            </div>
+            <div class="overflow-hidden border rounded-lg bg-slate-50 max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-200 text-slate-700">
+                            <th class="p-3 font-semibold">Tanggal Log</th>
+                            <th class="p-3 font-semibold">Status Transisi</th>
+                            <th class="p-3 font-semibold">Catatan Kerusakan</th>
+                            <th class="p-3 font-semibold id-pengubah-header">Diubah Oleh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelHistoriBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div class="flex justify-end pt-4 border-t mt-4">
+                <button onclick="tutupModalHistori()" class="px-5 py-2 bg-slate-800 text-white rounded-lg text-sm font-semibold hover:bg-slate-900 transition">Tutup Log</button>
+            </div>
         </div>
     </div>
 
@@ -337,13 +369,14 @@
         function batasiAksesUI() {
             const btnTabPengguna = document.getElementById('btn-tab-pengguna');
             
+            // Hak akses dinamis: Semua role (termasuk staf) kini dapat berinteraksi dengan kolom aksi tabel
+            document.getElementById('th-aksi').classList.remove('hidden');
+
             if (userRole === 'staf') {
-                document.getElementById('th-aksi').classList.add('hidden');
                 document.getElementById('wrapper-pengaturan').classList.add('pointer-events-none', 'opacity-40');
                 document.getElementById('msg-restrict').classList.remove('hidden');
                 if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
             } else {
-                document.getElementById('th-aksi').classList.remove('hidden');
                 if (userRole === 'admin') {
                     document.getElementById('wrapper-pengaturan').classList.remove('pointer-events-none', 'opacity-40');
                     document.getElementById('msg-restrict').classList.add('hidden');
@@ -354,6 +387,7 @@
                     if (btnTabPengguna) btnTabPengguna.classList.add('hidden');
                 }
             }
+            renderTabelUtama();
         }
 
         async function sinkronkanSemuaData() {
@@ -526,11 +560,12 @@
             }
         }
 
-        // FUNGSI KONTROL MODAL EDIT STATUS
+        // CONTROL OPEN & CLOSED FOR MODAL EDIT STATUS
         function bukaModalEdit(id, nama, statusSekarang) {
             document.getElementById('editItemId').value = id;
             document.getElementById('editItemNama').value = nama;
             document.getElementById('editItemStatus').value = statusSekarang;
+            document.getElementById('editItemCatatan').value = ''; // Mengosongkan catatan lama
             document.getElementById('modalEdit').classList.remove('hidden');
         }
 
@@ -539,24 +574,94 @@
             document.getElementById('formEditStatus').reset();
         }
 
-        // SUBMIT FORM EDIT STATUS KE SUPABASE
+        // OTOMATISASI DAN SUBMIT DUA AKSI DATABASE SEKALIGUS
         document.getElementById('formEditStatus').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('editItemId').value;
             const statusBaru = document.getElementById('editItemStatus').value;
+            const catatanText = document.getElementById('editItemCatatan').value.trim();
 
-            const { error } = await supabaseClient
+            // AKSI 1: Memperbarui status tabel inventaris utama secara otomatis
+            const { error: errorInduk } = await supabaseClient
                 .from('inventaris')
                 .update({ status: statusBaru })
                 .eq('id', id);
 
-            if(error) {
-                alert("Gagal memperbarui status: " + error.message);
+            if(errorInduk) {
+                alert("Gagal melakukan otomatisasi status induk: " + errorInduk.message);
+                return;
+            }
+
+            // AKSI 2: Menyuntikkan log baru ke dalam tabel riwayat perbaikan
+            const { error: errorRiwayat } = await supabaseClient
+                .from('riwayat_perbaikan')
+                .insert({
+                    inventaris_id: id,
+                    catatan_kerusakan: catatanText,
+                    status_akhir: statusBaru,
+                    teknisi: userSesi.email, // Rekam jejak email pengubah (disimpan ke kolom teknisi)
+                    tanggal_masuk: new Date().toISOString().split('T')[0] // Mengunci tanggal perubahan hari ini
+                });
+
+            if(errorRiwayat) {
+                alert("Status ter-update, namun gagal menulis jejak histori: " + errorRiwayat.message);
             } else {
                 tutupModalEdit();
-                await sinkronkanSemuaData(); // Reload UI & chart
+                await sinkronkanSemuaData(); // Re-sync dashboard, tabel, dan diagram donat
             }
         });
+
+        // CONTROL VIEW TIMELINE LOG PERBAIKAN (DENGAN PROTEKSI PRIVASI ROLE)
+        async function bukaModalHistori(id, namaBarang) {
+            document.getElementById('historiNamaBarang').innerText = namaBarang;
+            
+            const { data, error } = await supabaseClient
+                .from('riwayat_perbaikan')
+                .select('*')
+                .eq('inventaris_id', id)
+                .order('tanggal_masuk', { ascending: false });
+
+            const tbody = document.getElementById('tabelHistoriBody');
+            tbody.innerHTML = '';
+
+            // Manajemen Privasi: Header "Diubah Oleh" hanya dimunculkan untuk Admin & Asisten
+            const headerPengubah = document.querySelector('.id-pengubah-header');
+            if (userRole === 'admin' || userRole === 'asisten') {
+                headerPengubah.classList.remove('hidden');
+            } else {
+                headerPengubah.classList.add('hidden');
+            }
+
+            if(error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 font-medium">Belum ada rekam jejak histori pada perangkat ini.</td></tr>`;
+            } else {
+                data.forEach(h => {
+                    // Isi kolom email pengubah dikosongkan/dihapus jika role adalah staf
+                    const kolomPengubah = (userRole === 'admin' || userRole === 'asisten') ? 
+                        `<td class="p-3 text-slate-600 font-mono font-semibold">${h.teknisi || '-'}</td>` : '';
+
+                    let warnaBadge = 'bg-emerald-100 text-emerald-800';
+                    if(h.status_akhir === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
+                    if(h.status_akhir === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
+
+                    const row = `
+                        <tr class="hover:bg-slate-100 bg-white transition">
+                            <td class="p-3 text-slate-500 font-medium">${h.tanggal_masuk}</td>
+                            <td class="p-3"><span class="${warnaBadge} text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">${h.status_akhir || 'Diperbaiki'}</span></td>
+                            <td class="p-3 text-slate-700 font-medium whitespace-pre-line">${h.catatan_kerusakan || '-'}</td>
+                            ${kolomPengubah}
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            document.getElementById('modalHistori').classList.remove('hidden');
+        }
+
+        function tutupModalHistori() {
+            document.getElementById('modalHistori').classList.add('hidden');
+        }
 
         function renderTabelUtama() {
             const tbody = document.getElementById('tabelUtamaBody');
@@ -578,12 +683,20 @@
                     if(item.status === 'Diperbaiki') warnaBadge = 'bg-amber-100 text-amber-800';
                     if(item.status === 'Rusak') warnaBadge = 'bg-red-100 text-red-800';
 
-                    // Tambahan Aksi: Menggabungkan tombol Edit dan Hapus ke dalam satu wadah aksi terintegrasi
-                    const actionBtn = userRole !== 'staf' ? 
-                        `<td class="p-4 text-center flex items-center justify-center gap-3">
-                            <button onclick="bukaModalEdit('${item.id}', '${item.nama_barang}', '${item.status}')" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded">Edit</button>
-                            <button onclick="hapusBarang('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 hover:bg-red-100 px-2 py-1 rounded">Hapus</button>
-                         </td>` : '';
+                    // Rekonstruksi Tombol Aksi: Staf mendapatkan izin Edit & Histori, namun diproteksi dari tombol Hapus
+                    let actionBtn = '';
+                    if (userRole === 'staf') {
+                        actionBtn = `<td class="p-4 text-center flex items-center justify-center gap-2">
+                            <button onclick="bukaModalEdit('${item.id}', '${item.nama_barang}', '${item.status}')" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded">Edit</button>
+                            <button onclick="bukaModalHistori('${item.id}', '${item.nama_barang}')" class="text-xs text-slate-600 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded">Histori</button>
+                        </td>`;
+                    } else {
+                        actionBtn = `<td class="p-4 text-center flex items-center justify-center gap-2">
+                            <button onclick="bukaModalEdit('${item.id}', '${item.nama_barang}', '${item.status}')" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded">Edit</button>
+                            <button onclick="bukaModalHistori('${item.id}', '${item.nama_barang}')" class="text-xs text-slate-600 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded">Histori</button>
+                            <button onclick="hapusBarang('${item.id}')" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded">Hapus</button>
+                         </td>`;
+                    }
 
                     const row = `
                         <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
@@ -658,12 +771,7 @@
         function jalankanSistemUI() {
             renderDropdowns();
             renderPengaturan();
-            renderTabelUtama();
             hitungKalkulasiDashboard();
-            
-            if (userRole === 'admin') {
-                renderTabelUserRoles();
-            }
         }
     </script>
 </body>
